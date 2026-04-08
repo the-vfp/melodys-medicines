@@ -1,0 +1,7 @@
+# Local Claude Code settings (contains machine-specific paths)
+.claude/settings.local.json
+
+# Separate repos
+Brackroot-Academy/
+claude chat exporter/
+plant tracker/

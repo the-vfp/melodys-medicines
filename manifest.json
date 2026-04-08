@@ -1,0 +1,17 @@
+{
+  "name": "Melody's Medicines",
+  "short_name": "Melody's Meds",
+  "description": "Apothecaria Companion App",
+  "start_url": "./melodys-medicines.html",
+  "display": "standalone",
+  "background_color": "#F5ECD7",
+  "theme_color": "#2D4A28",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

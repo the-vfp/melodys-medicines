@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Melody's Medicines — Data Transfer</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, serif; background: #F5ECD7; color: #2C1810; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
+h1 { font-size: 22px; margin-bottom: 4px; }
+p { font-size: 14px; color: #5C4033; margin-bottom: 16px; text-align: center; }
+.card { background: #FFFEF7; border: 1px solid #D4C5A9; border-radius: 10px; padding: 20px; width: 100%; max-width: 400px; margin-bottom: 16px; }
+.card h2 { font-size: 16px; color: #8B4513; margin-bottom: 10px; }
+button { padding: 12px 24px; border-radius: 8px; font-family: Georgia, serif; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 8px; }
+.btn-export { border: none; background: #4A6741; color: #F5ECD7; }
+.btn-import { border: none; background: #B8860B; color: #F5ECD7; }
+.btn-file { border: 1px solid #D4C5A9; background: #FFFEF7; color: #2C1810; }
+textarea { width: 100%; height: 80px; padding: 8px; font-size: 12px; font-family: monospace; border: 1px solid #D4C5A9; border-radius: 6px; background: #F5ECD7; color: #2C1810; margin-bottom: 8px; }
+.status { font-size: 13px; color: #4A6741; font-weight: 600; text-align: center; margin-top: 8px; }
+.status.error { color: #8B2500; }
+.divider { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 12px; color: #5C4033; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #D4C5A9; }
+input[type="file"] { display: none; }
+</style>
+</head>
+<body>
+
+<h1>Data Transfer</h1>
+<p>Move your Melody's Medicines save data between devices.</p>
+
+<div class="card">
+  <h2>Export</h2>
+  <button class="btn-export" onclick="doExportFile()">Download Save File</button>
+  <div class="divider">or</div>
+  <button class="btn-file" onclick="doExportClipboard()">Copy to Clipboard</button>
+  <textarea id="exportArea" readonly onclick="this.select()" placeholder="Your save data will appear here..." style="display:none"></textarea>
+  <div id="exportStatus"></div>
+</div>
+
+<div class="card">
+  <h2>Import</h2>
+  <input type="file" id="fileInput" accept=".json" onchange="doImportFile(event)">
+  <button class="btn-import" onclick="document.getElementById('fileInput').click()">Load Save File</button>
+  <div class="divider">or</div>
+  <textarea id="importArea" placeholder="Paste save data here..."></textarea>
+  <button class="btn-file" onclick="doImportPaste()">Import from Paste</button>
+  <div id="importStatus"></div>
+</div>
+
+<script>
+var KEY = 'melodys-medicines';
+
+function doExportFile() {
+  var data = localStorage.getItem(KEY);
+  var st = document.getElementById('exportStatus');
+  if (!data) {
+    st.className = 'status error';
+    st.textContent = 'No save data found on this device!';
+    return;
+  }
+  var blob = new Blob([data], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'melodys-medicines-save.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  st.className = 'status';
+  st.textContent = 'Save file downloaded!';
+}
+
+function doExportClipboard() {
+  var data = localStorage.getItem(KEY);
+  var el = document.getElementById('exportArea');
+  var st = document.getElementById('exportStatus');
+  if (!data) {
+    st.className = 'status error';
+    st.textContent = 'No save data found on this device!';
+    return;
+  }
+  el.style.display = 'block';
+  el.value = data;
+  el.select();
+  try {
+    navigator.clipboard.writeText(data).then(function() {
+      st.className = 'status';
+      st.textContent = 'Copied to clipboard! (Warning: large saves may be truncated on mobile)';
+    }).catch(function() {
+      st.className = 'status';
+      st.textContent = 'Select all the text above and copy manually.';
+    });
+  } catch(e) {
+    st.className = 'status';
+    st.textContent = 'Select all the text above and copy manually.';
+  }
+}
+
+function applyImport(raw, st) {
+  try {
+    JSON.parse(raw);
+    localStorage.setItem(KEY, raw);
+    st.className = 'status';
+    st.textContent = 'Imported! Reloading...';
+    setTimeout(function() { location.reload(); }, 500);
+  } catch(e) {
+    st.className = 'status error';
+    st.textContent = 'Invalid data — the file may be corrupted or incomplete.';
+  }
+}
+
+function doImportFile(event) {
+  var st = document.getElementById('importStatus');
+  var file = event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    applyImport(e.target.result.trim(), st);
+  };
+  reader.onerror = function() {
+    st.className = 'status error';
+    st.textContent = 'Failed to read file.';
+  };
+  reader.readAsText(file);
+}
+
+function doImportPaste() {
+  var raw = document.getElementById('importArea').value.trim();
+  var st = document.getElementById('importStatus');
+  if (!raw) {
+    st.className = 'status error';
+    st.textContent = 'Paste your save data first!';
+    return;
+  }
+  applyImport(raw, st);
+}
+</script>
+</body>
+</html>
