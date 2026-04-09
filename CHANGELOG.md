@@ -2,6 +2,11 @@
 
 All notable changes to Melody's Medicines are documented here.
 
+## 2026-04-09
+
+### Fixed
+- App icon now masks properly on Android (Pixel, Samsung, etc.) — added maskable icon with safe-zone padding
+
 ## 2026-03-25
 
 ### Added
